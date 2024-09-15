@@ -1,0 +1,5 @@
+package DBControllers;
+
+enum AddUserResults {
+    SUCCESS, ALREADY_EXISTS, INVALID_PASSWORD, INVALID_PHONE_NUMBER,FAILURE
+}
