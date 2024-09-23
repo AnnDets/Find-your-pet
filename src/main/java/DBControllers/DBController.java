@@ -51,7 +51,11 @@ public class DBController implements AutoCloseable  {
             logger_.log(Level.SEVERE, "Ошибка при закрытии соединения", e);
         }
     }
+<<<<<<< HEAD
     public ArrayList<AddUserError> addUser(String name, String email, String phone, String plainPassword, String address){
+=======
+    public ArrayList<AddUserError> AddUser(String name, String email, String phone, String plainPassword, String address){
+>>>>>>> 81d6b3e23fbc46fbdc3bbe4718c5698e84dafe3b
         UserController userController = new UserController(connection_, logger_);
         return userController.addUser(name, email, phone, plainPassword, address);
     }

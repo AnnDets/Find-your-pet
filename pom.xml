@@ -35,12 +35,15 @@
             <artifactId>javax.mail-api</artifactId>
             <version>1.6.2</version>
         </dependency>
+<<<<<<< HEAD
         <!-- https://mvnrepository.com/artifact/org.json/json -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20240303</version>
         </dependency>
+=======
+>>>>>>> 81d6b3e23fbc46fbdc3bbe4718c5698e84dafe3b
 
     </dependencies>
 </project>
