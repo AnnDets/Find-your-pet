@@ -44,3 +44,6 @@
 ### **Диаграмма вариантов использования**
 ![диаграмма](UseCaseDiagram_FindYourPet.jpg)
 
+## **Диаграмма базы данных**
+![диаграмма](DataBaseDiagram_FindYourPet.png)
+
