@@ -12,3 +12,4 @@
 -JavaSwing: для создания интерфейсов
 
 ## Ссылка на прототипы страниц
+https://www.figma.com/design/lPUzUtd1KmdCjGC0WdFvK3/Find-your-pet?node-id=0-1&node-type=canvas&t=IMx2D3t5uSVBvUfo-0
