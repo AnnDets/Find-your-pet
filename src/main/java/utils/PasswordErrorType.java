@@ -17,4 +17,5 @@ public enum PasswordErrorType implements AddUserError {
     public String getMessage() {
         return message;
     }
+
 }

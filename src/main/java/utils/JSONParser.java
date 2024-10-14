@@ -1,61 +1,98 @@
 package utils;
+
+import models.User;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import utils.PasswordErrorType;
 
-import java.sql.*;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Map;
 
 public class JSONParser {
-    Connection connection_;
-    Logger logger_;
-    public String getLostPetsData(ArrayList<Integer> lostIds) {
-        JSONArray jsonArray = new JSONArray();
 
-        if (lostIds.isEmpty()) {
-            return jsonArray.toString(); // Возвращаем пустой JSON массив, если нет lost_id
+    public static JSONObject parseAddUserErrors(ArrayList<AddUserError> errors) {
+        JSONObject result = new JSONObject();
+
+        // Устанавливаем статус в зависимости от наличия ошибок
+        result.put("status", errors.isEmpty() ? 1 : 0);
+
+        // Создаем Map для группировки ошибок по классу
+        Map<String, JSONArray> errorGroups = new HashMap<>();
+
+        // Обрабатываем ошибки и группируем их по типу
+        for (AddUserError error : errors) {
+            String errorClassName = error.getClass().getSimpleName();
+
+            // Если класс ошибки еще не добавлен, создаем новый массив для ошибок этого класса
+            errorGroups.putIfAbsent(errorClassName, new JSONArray());
+
+            // Добавляем имя ошибки в массив
+            errorGroups.get(errorClassName).put(error.name());
         }
 
-        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM lost_pets WHERE lost_id IN (");
+        // Преобразуем Map в JSON-массив
+        JSONArray errorsArray = new JSONArray();
+        for (Map.Entry<String, JSONArray> entry : errorGroups.entrySet()) {
+            JSONArray errorDetails = new JSONArray();
+            errorDetails.put(entry.getKey());       // имя класса ошибки
+            errorDetails.put(entry.getValue());     // массив имен ошибок этого класса
 
-        for (int i = 0; i < lostIds.size(); i++) {
-            queryBuilder.append("?");
-            if (i < lostIds.size() - 1) {
-                queryBuilder.append(", ");
-            }
-        }
-        queryBuilder.append(")");
-
-        String query = queryBuilder.toString();
-
-
-        try (PreparedStatement stmt = connection_.prepareStatement(query)) {
-            for (int i = 0; i < lostIds.size(); i++) {
-                stmt.setInt(i + 1, lostIds.get(i));
-            }
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("lost_id", rs.getInt("lost_id"));
-                    jsonObject.put("pet_id", rs.getInt("pet_id"));
-                    jsonObject.put("name", rs.getString("name"));
-                    jsonObject.put("species", rs.getString("species"));
-                    jsonObject.put("bread", rs.getString("bread"));
-                    jsonObject.put("age", rs.getInt("age"));
-                    jsonObject.put("gender", rs.getString("gender"));
-                    // Добавьте другие поля по необходимости
-
-                    jsonArray.put(jsonObject);
-                }
-            }
-        } catch (SQLException e) {
-            logger_.log(Level.SEVERE, "Ошибка при получении данных о пропавших животных", e);
+            // Добавляем в основной массив ошибок
+            errorsArray.put(errorDetails);
         }
 
-        return jsonArray.toString(); // Возвращаем JSON строку
+        // Добавляем массив ошибок в JSON-объект
+        result.put("errors", errorsArray);
+        return result;
     }
+
+    public static JSONObject parseUpdateUserErrors(ArrayList<AddUserError> errors) {
+        JSONObject result = new JSONObject();
+
+        // Устанавливаем статус в зависимости от наличия ошибок
+        result.put("status", errors.isEmpty() ? 1 : 0);
+
+        // Создаем Map для группировки ошибок по классу
+        Map<String, JSONArray> errorGroups = new HashMap<>();
+
+        // Обрабатываем ошибки и группируем их по типу
+        for (AddUserError error : errors) {
+            String errorClassName = error.getClass().getSimpleName();
+
+            // Если класс ошибки еще не добавлен, создаем новый массив для ошибок этого класса
+            errorGroups.putIfAbsent(errorClassName, new JSONArray());
+
+            // Добавляем имя ошибки в массив
+            errorGroups.get(errorClassName).put(error.name());
+        }
+
+        // Преобразуем Map в JSON-массив
+        JSONArray errorsArray = new JSONArray();
+        for (Map.Entry<String, JSONArray> entry : errorGroups.entrySet()) {
+            JSONArray errorDetails = new JSONArray();
+            errorDetails.put(entry.getKey());       // имя класса ошибки
+            errorDetails.put(entry.getValue());     // массив имен ошибок этого класса
+
+            // Добавляем в основной массив ошибок
+            errorsArray.put(errorDetails);
+        }
+
+        // Добавляем массив ошибок в JSON-объект
+        result.put("errors", errorsArray);
+        return result;
+    }
+    public static JSONObject parseUser(User user) {
+        JSONObject userJSON = new JSONObject();
+
+        userJSON.put("id", user.getId());
+        userJSON.put("name", user.getName());
+        userJSON.put("email", user.getEmail());
+        userJSON.put("phone", user.getPhone());
+        userJSON.put("password_hash", user.getPasswordHash());
+        userJSON.put("address", user.getAddress());
+
+        return userJSON;
+    }
+
 }

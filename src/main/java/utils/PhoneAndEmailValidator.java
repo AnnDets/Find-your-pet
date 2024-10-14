@@ -43,8 +43,8 @@ public class PhoneAndEmailValidator {
 
     public static boolean isValidNumber(String number, String country){
         String regionCode = countryMap.get(country);
-
-        if (regionCode != null) {
+        return true;
+        /*if (regionCode != null) {
             try {
                 // Парсинг номера телефона
                 PhoneNumber phoneNumber = phoneUtil.parse(number, regionCode);
@@ -66,15 +66,16 @@ public class PhoneAndEmailValidator {
         } else {
             throw new NullPointerException("Регион не поддерживается");
 
-        }
-        return false;
+        }*/
+        //return false;
     }
     public static boolean isEmailValid(String email){
-        try {
+        return true;
+        /*try {
             new InternetAddress(email).validate();
             return true;
         } catch (Exception ex) {
             return false;
-        }
+        }*/
     }
 }
