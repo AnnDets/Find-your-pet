@@ -6,17 +6,23 @@ public class Report {
     private User user;
     private ArrayList<String> colors;
     private ArrayList<String> specialMarks;
+    private ArrayList<String> photos;
     private String breed;
     private String description;
     private String foundDate;
     private String location;
     private String status;
 
-    public Report(int id, User user, ArrayList<String> colors, ArrayList<String> specialMarks, String breed, String description, String foundDate, String location, String status) {
+    public ArrayList<String> getPhotos() {
+        return photos;
+    }
+
+    public Report(int id, User user, ArrayList<String> colors, ArrayList<String> specialMarks, ArrayList<String> photos, String breed, String description, String foundDate, String location, String status) {
         this.id = id;
         this.user = user;
         this.colors = colors;
         this.specialMarks = specialMarks;
+        this.photos = photos;
         this.breed = breed;
         this.description = description;
         this.foundDate = foundDate;
