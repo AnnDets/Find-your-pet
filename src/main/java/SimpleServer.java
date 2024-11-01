@@ -1,25 +1,23 @@
 import DBControllers.DBController;
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import models.Report;
+import org.json.JSONObject;
+import services.ReportController;
+import services.UserService;
+import utils.AddUserError;
+import utils.JSONParser;
+import utils.ReportError;
+
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import models.Report;
-import org.json.JSONObject;
-import services.ReportController;
-import services.UserController;
-import utils.AddUserError;
-import utils.JSONParser;
-import utils.ReportError;
 
 public class SimpleServer {
     public static void main(String[] args) throws IOException {
@@ -51,18 +49,14 @@ public class SimpleServer {
 
                 // Преобразуем строку в JSON
                 JSONObject jsonObject = new JSONObject(requestBody);
-
-                try (DBController dbController = new DBController()) {
-                    UserController userController = new UserController(dbController);
+                String jdbcUrl_ = "jdbc:postgresql://localhost:5432/findyourpet";
+                String username_ = "postgres";
+                String password_ = "123456";
+                try (Connection connection_ = DriverManager.getConnection(jdbcUrl_, username_, password_)) {
+                    UserService userService = new UserService(connection_);
 
                     // Вызываем метод добавления пользователя
-                    ArrayList<AddUserError> errors = userController.addUser(
-                            jsonObject.getString("name"),
-                            jsonObject.getString("email"),
-                            jsonObject.getString("phone"),
-                            jsonObject.getString("password"),
-                            jsonObject.getString("address")
-                    );
+                    ArrayList<AddUserError> errors = userService.addUser(jsonObject.getString("name"), jsonObject.getString("email"), jsonObject.getString("phone"), jsonObject.getString("password"), jsonObject.getString("address"));
 
                     // Проверяем ошибки
                     if (!errors.isEmpty()) {
@@ -110,8 +104,7 @@ public class SimpleServer {
                 ArrayList<ReportError> errors;
                 try (DBController dbController = new DBController()) {
                     ReportController reportController = new ReportController(dbController);
-                    errors = reportController.addReport(report.getUser().getId(), report.getColors().toArray(new String[0]), report.getColors().toArray(new String[0]),
-                            report.getColors().toArray(new String[0]), report.getBreed(), report.getDescription(), report.getFoundDate(), report.getLocation(), report.getStatus());
+                    errors = reportController.addReport(report.getUser().getId(), report.getColors().toArray(new String[0]), report.getColors().toArray(new String[0]), report.getColors().toArray(new String[0]), report.getBreed(), report.getDescription(), report.getFoundDate(), report.getLocation(), report.getStatus());
                 } catch (SQLException e) {
                     exchange.sendResponseHeaders(500, -1); // Internal Server Error
                     return;
@@ -132,6 +125,7 @@ public class SimpleServer {
             }
         }
     }
+
     static class UserUpdateHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -151,17 +145,10 @@ public class SimpleServer {
                 JSONObject jsonObject = new JSONObject(requestBody);
 
                 try (DBController dbController = new DBController()) {
-                    UserController userController = new UserController(dbController);
+                    UserService userService = new UserService(dbController);
 
                     // Вызываем метод добавления пользователя
-                    ArrayList<AddUserError> errors = userController.updateUser(
-                            userController.getUserById(jsonObject.getInt("userId")).getId(),
-                            jsonObject.getString("name"),
-                            jsonObject.getString("email"),
-                            jsonObject.getString("phone"),
-                            jsonObject.getString("password"),
-                            jsonObject.getString("address")
-                    );
+                    ArrayList<AddUserError> errors = userService.updateUser(userService.getUserById(jsonObject.getInt("userId")).getId(), jsonObject.getString("name"), jsonObject.getString("email"), jsonObject.getString("phone"), jsonObject.getString("password"), jsonObject.getString("address"));
 
                     // Проверяем ошибки
                     if (!errors.isEmpty()) {
@@ -189,12 +176,13 @@ public class SimpleServer {
             }
         }
     }
+
     static class GetReportsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if ("GET".equals(exchange.getRequestMethod())) {
                 try (DBController dbController = new DBController()) {
-                   ReportController reportController = new ReportController(dbController);
+                    ReportController reportController = new ReportController(dbController);
                     ArrayList<Report> reports = reportController.getAllReports();
 
                     String jsonResponse = JSONParser.serializeReports(reports).toString();
@@ -209,6 +197,7 @@ public class SimpleServer {
             }
         }
     }
+
     static class GetFilteredReportsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {

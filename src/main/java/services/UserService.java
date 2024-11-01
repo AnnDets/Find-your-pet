@@ -1,50 +1,52 @@
 package services;
 
-import DBControllers.DBController;
+import dao.UserDAOFactory;
+import dao.UserDao;
 import models.User;
 import utils.LogUtil;
 import utils.*;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 
-public class UserController {
-    private DBController dbController_;
+public class UserService {
+    private UserDao userDao;
 
-    public UserController(DBController dbController) {
-        this.dbController_ = dbController;
+    public UserService(Connection connection) {
+        this.userDao = UserDAOFactory.createUserDao("fake", connection);
     }
 
-    public ArrayList<AddUserError> addUser(String name, String email, String phone, String plainPassword, String address) {
+    public ArrayList<AddUserError> addUser(User user) {
         ArrayList<AddUserError> errors = new ArrayList<>();
 
-        LogUtil.debug("Validating user data: name=" + name + ", email=" + email + ", phone=" + phone);
+        LogUtil.debug("Validating user data: name=" + user.getName() + ", email=" + user.getEmail() + ", phone=" + user.getPhone());
 
-        if (!PhoneAndEmailValidator.isEmailValid(email)) {
-            LogUtil.warn("Invalid email: " + email);
+        if (!PhoneAndEmailValidator.isEmailValid(user.getEmail())) {
+            LogUtil.warn("Invalid email: " + user.getEmail());
             errors.add(PhoneAndEmailError.INVALID_EMAIL);
         }
-        if (!PhoneAndEmailValidator.isValidNumber(phone, address)) {
-            LogUtil.warn("Invalid phone: " + phone);
+        if (!PhoneAndEmailValidator.isValidNumber(user.getPhone(), user.getAddress())) {
+            LogUtil.warn("Invalid phone: " + user.getPhone());
             errors.add(PhoneAndEmailError.INVALID_PHONE);
         }
 
-        ArrayList<PasswordErrorType> passwordErrors = PasswordUtils.validatePassword(plainPassword);
+        ArrayList<PasswordErrorType> passwordErrors = PasswordUtils.validatePassword(user.getPasswordHash()); // кринж, нужен PlainPassword
         if (!passwordErrors.isEmpty()) {
-            LogUtil.debug("Password validation failed for user: " + email);
+            LogUtil.debug("Password validation failed for user: " + user.getEmail());
         }
         errors.addAll(passwordErrors);
 
         if (errors.isEmpty()) {
-            String hashedPassword = PasswordUtils.hashPassword(plainPassword);
-            boolean success = dbController_.addUserToDB(name, email, phone, hashedPassword, address);
+            String hashedPassword = PasswordUtils.hashPassword(user.getPlainPassword());
+            boolean success = userDao.create(user);
             if (!success) {
-                LogUtil.error("User already exists with email: " + email, null);
+                LogUtil.error("user already exists with email: " + user.getEmail(), null);
                 errors.add(PhoneAndEmailError.EMAIL_ALREADY_EXISTS);
             } else {
-                LogUtil.info("User successfully registered: " + email);
+                LogUtil.info("user successfully registered: " + user.getEmail());
             }
         } else {
-            LogUtil.debug("User registration failed due to validation errors");
+            LogUtil.debug("user registration failed due to validation errors");
         }
 
         return errors;
@@ -52,7 +54,7 @@ public class UserController {
 
     public boolean authenticateUser(String email, String plainPassword) {
         LogUtil.debug("Authenticating user: " + email);
-        String storedHashedPassword = dbController_.getUserPasswordByEmail(email);
+        String storedHashedPassword = userDao.getUserPasswordByEmail(email);
         if (storedHashedPassword != null) {
             boolean isAuthenticated = PasswordUtils.checkPassword(plainPassword, storedHashedPassword);
             if (isAuthenticated) {
@@ -67,8 +69,8 @@ public class UserController {
         return false;
     }
 
-    public ArrayList<AddUserError> updateUser(int id, String name, String email, String phone, String plainPassword, String address) {
-        LogUtil.debug("Updating user: id=" + id + ", email=" + email);
+    public ArrayList<AddUserError> updateUser(User user) {
+        LogUtil.debug("Updating user: id=" + user.getId() + ", email=" + user.getEmail());
         ArrayList<AddUserError> errors = new ArrayList<>();
 
         if (!PhoneAndEmailValidator.isEmailValid(email)) {
@@ -85,7 +87,7 @@ public class UserController {
 
         if (errors.isEmpty()) {
             String hashedPassword = PasswordUtils.hashPassword(plainPassword);
-            dbController_.updateUserInDB(id, name, email, phone, hashedPassword, address);
+            userDao.update(user);
             LogUtil.info("User updated successfully: id=" + id + ", email=" + email);
         } else {
             LogUtil.debug("User update failed due to validation errors");
@@ -94,24 +96,24 @@ public class UserController {
         return errors;
     }
 
-    public boolean deleteUser(int userId) {
-        LogUtil.debug("Deleting user: id=" + userId);
-        boolean result = dbController_.deleteUserFromDB(userId);
+    public boolean deleteUser(User user) {
+        LogUtil.debug("Deleting user: id=" + user.getId());
+        boolean result = userDao.delete(user);
         if (result) {
-            LogUtil.info("User deleted successfully: id=" + userId);
+            LogUtil.info("User deleted successfully: id=" + user.getId());
         } else {
-            LogUtil.error("Failed to delete user: id=" + userId, null);
+            LogUtil.error("Failed to delete user: id=" + user.getId(), null);
         }
         return result;
     }
 
-    public User getUserById(int userId) {
-        LogUtil.debug("Fetching user by id: " + userId);
-        return dbController_.getUserFromDB(userId);
+    public User getUserById(User user) {
+        LogUtil.debug("Fetching user by id: " + user.getId());
+        return (User) userDao.read(user);
     }
 
-    public ArrayList<User> getAllUsers() {
+    public ArrayList<Object> getAllUsers() {
         LogUtil.debug("Fetching all users");
-        return dbController_.getAllUsers();
+        return userDao.readAll();
     }
 }
