@@ -130,7 +130,8 @@ public class DBController implements AutoCloseable {
                         rs.getString("email"),
                         rs.getString("phone"),
                         rs.getString("password_hash"),
-                        rs.getString("address")
+                        rs.getString("address"),
+                        "" // TODO
                 );
             }
         } catch (SQLException e) {
@@ -152,7 +153,8 @@ public class DBController implements AutoCloseable {
                         rs.getString("email"),
                         rs.getString("phone"),
                         rs.getString("password_hash"),
-                        rs.getString("address")
+                        rs.getString("address"),
+                        "" // TODO
                 );
                 users.add(user);
             }
