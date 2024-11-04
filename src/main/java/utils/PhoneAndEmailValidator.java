@@ -2,7 +2,7 @@ package utils;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-//import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetAddress;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +11,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PhoneAndEmailValidator {
@@ -43,8 +44,10 @@ public class PhoneAndEmailValidator {
     }
 
     public static boolean isValidNumber(String number, String country){
-        String regionCode = countryMap.get(country);
-        return true;
+        final String PHONE_REGEX = "^\\+?(375|80)(\\s|-)?(25|29|33|44|17)(\\s|-)?\\d{3}(\\s|-)?\\d{2}(\\s|-)?\\d{2}$";
+        Pattern pattern = Pattern.compile(PHONE_REGEX);
+        Matcher matcher = pattern.matcher(number);
+        return matcher.matches();
         /*if (regionCode != null) {
             try {
                 // Парсинг номера телефона
@@ -70,10 +73,12 @@ public class PhoneAndEmailValidator {
         }*/
         //return false;
     }
-    public static boolean isEmailValid(String email){
-        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+    public static boolean isEmailValid(String email) {
+        final String EMAIL_REGEX = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
+        Pattern pattern = Pattern.compile(EMAIL_REGEX);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
 
-        return Pattern.matches(emailRegex, email);
         /*try {
             new InternetAddress(email).validate();
             return true;
