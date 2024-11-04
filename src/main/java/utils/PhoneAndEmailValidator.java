@@ -2,7 +2,7 @@ package utils;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import javax.mail.internet.InternetAddress;
+//import javax.mail.internet.InternetAddress;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +11,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Pattern;
 
 public class PhoneAndEmailValidator {
     static Map<String, String> countryMap = new HashMap<>();
@@ -70,7 +71,9 @@ public class PhoneAndEmailValidator {
         //return false;
     }
     public static boolean isEmailValid(String email){
-        return true;
+        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+
+        return Pattern.matches(emailRegex, email);
         /*try {
             new InternetAddress(email).validate();
             return true;
