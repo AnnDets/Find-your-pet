@@ -7,8 +7,17 @@ public class User {
     private String phone;
     private String password_hash;
     private String address;
-
+    private String PlainPassword;
     // Конструктор
+    public User(int user_id, String name, String email, String phone, String password_hash, String plainPassword, String address) {
+        this.user_id = user_id;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.password_hash = password_hash;
+        this.address = address;
+        this.PlainPassword = plainPassword;
+    }
     public User(int user_id, String name, String email, String phone, String password_hash, String address) {
         this.user_id = user_id;
         this.name = name;
@@ -16,6 +25,7 @@ public class User {
         this.phone = phone;
         this.password_hash = password_hash;
         this.address = address;
+        this.PlainPassword = "";
     }
 
     // Геттеры и сеттеры для всех полей
@@ -65,6 +75,12 @@ public class User {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPlainPassword() { return PlainPassword; }
+
+    public void setPlainPassword(String PlainPassword) {
+        this.PlainPassword = PlainPassword;
     }
 
     @Override

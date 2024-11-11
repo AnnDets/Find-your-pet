@@ -1,10 +1,12 @@
-import DBControllers.DBController;
+//import DBControllers.DBController;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import models.Report;
 import org.json.JSONObject;
-import services.ReportController;
+import services.ReportService;
 import services.UserService;
 import utils.AddUserError;
 import utils.JSONParser;
@@ -16,10 +18,27 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SimpleServer {
+    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/findyourpet";
+    private static final String DB_USERNAME = "postgres";
+    private static final String DB_PASSWORD = "123456";
+    private static UserService userService;
+    private static ReportService reportService;
+
+    static {
+        try {
+            Connection connection = DriverManager.getConnection(JDBC_URL, DB_USERNAME, DB_PASSWORD);
+            userService = new UserService(connection);
+            reportService = new ReportService(connection);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error initializing database connection", e);
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
         server.createContext("/register", new RegisterHandler());
@@ -27,99 +46,136 @@ public class SimpleServer {
         server.createContext("/addReport", new ReportAddHandler());
         server.createContext("/getReports", new GetReportsHandler());
         server.createContext("/getFilteredReports", new GetFilteredReportsHandler());
-        server.setExecutor(null); // Use default executor
+        server.createContext("/login", new LoginHandler());
+        server.setExecutor(null);
         server.start();
         System.out.println("Server started on port 8080");
     }
 
-    static class RegisterHandler implements HttpHandler {
+    public static class RegisterHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if ("POST".equals(exchange.getRequestMethod())) {
-                // Получаем тело запроса
-                InputStream inputStream = exchange.getRequestBody();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder stringBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-                String requestBody = stringBuilder.toString();
-                System.out.println("Request body: " + requestBody);
+            // Установка заголовков CORS
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://localhost:3000");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
 
-                // Преобразуем строку в JSON
-                JSONObject jsonObject = new JSONObject(requestBody);
-                String jdbcUrl_ = "jdbc:postgresql://localhost:5432/findyourpet";
-                String username_ = "postgres";
-                String password_ = "123456";
-                try (Connection connection_ = DriverManager.getConnection(jdbcUrl_, username_, password_)) {
-                    UserService userService = new UserService(connection_);
+            // Проверка, является ли запрос предзапросом (OPTIONS)
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(200, -1); // Успешный ответ для предзапросов
+                return;
+            }
 
-                    // Вызываем метод добавления пользователя
-                    ArrayList<AddUserError> errors = userService.addUser(jsonObject.getString("name"), jsonObject.getString("email"), jsonObject.getString("phone"), jsonObject.getString("password"), jsonObject.getString("address"));
+            // Обработка POST-запросов на регистрацию
+            if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try (InputStream inputStream = exchange.getRequestBody();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
-                    // Проверяем ошибки
+                    String requestBody = reader.lines().reduce("", String::concat);
+                    JSONObject jsonObject = new JSONObject(requestBody);
+
+                    // Основная логика добавления пользователя
+                    ArrayList<AddUserError> errors = userService.addUser(JSONParser.jsonToUser(jsonObject));
+
                     if (!errors.isEmpty()) {
-                        JSONObject errorResponse = JSONParser.parseAddUserErrors(errors);
-                        String jsonResponse = errorResponse.toString();
-
-                        // Отправляем ошибки клиенту
-                        exchange.sendResponseHeaders(400, jsonResponse.length());
-                        OutputStream os = exchange.getResponseBody();
-                        os.write(jsonResponse.getBytes());
-                        os.close();
+                        String jsonResponse = JSONParser.parseAddUserErrors(errors).toString();
+                        sendResponse(exchange, 400, jsonResponse);
                     } else {
-                        // Успешная регистрация
-                        String response = "User registered successfully!";
-                        exchange.sendResponseHeaders(200, response.length());
-                        OutputStream os = exchange.getResponseBody();
-                        os.write(response.getBytes());
-                        os.close();
+                        sendResponse(exchange, 200, "User registered successfully!");
                     }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
             } else {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
             }
         }
+
+        // Метод для отправки ответа
+        private void sendResponse(HttpExchange exchange, int statusCode, String responseText) throws IOException {
+            exchange.sendResponseHeaders(statusCode, responseText.getBytes().length);
+            try (OutputStream outputStream = exchange.getResponseBody()) {
+                outputStream.write(responseText.getBytes());
+            }
+        }
     }
 
+    public static class LoginHandler implements HttpHandler {
+        private static final String SECRET_KEY = "cviyckkchkcfhdgxjzdzd"; // Секретный ключ для JWT
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // CORS-заголовки
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://localhost:3000");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(204, -1); // No Content для предзапросов
+                return;
+            }
+
+            if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try (InputStream inputStream = exchange.getRequestBody();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+
+                    String requestBody = reader.lines().reduce("", String::concat);
+                    JSONObject jsonObject = new JSONObject(requestBody);
+
+                    String email = jsonObject.getString("email");
+                    String password = jsonObject.getString("password");
+
+                    if (userService.authenticateUser(email, password)) {
+                        String token = createToken(email);
+                        sendResponse(exchange, 200, new JSONObject().put("token", token).toString());
+                    } else {
+                        sendResponse(exchange, 401, "Неверные учетные данные");
+                    }
+                }
+            } else {
+                exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+            }
+        }
+
+        private boolean authenticate(String email, String password) {
+            // Ваша логика проверки учетных данных
+            return "test@example.com".equals(email) && "password".equals(password);
+        }
+
+        private String createToken(String email) {
+            Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
+            return JWT.create()
+                    .withSubject(email)
+                    .withIssuedAt(new Date())
+                    .withExpiresAt(new Date(System.currentTimeMillis() + 3600 * 1000)) // 1 час
+                    .sign(algorithm);
+        }
+
+        private void sendResponse(HttpExchange exchange, int statusCode, String responseText) throws IOException {
+            exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
+            exchange.sendResponseHeaders(statusCode, responseText.getBytes("UTF-8").length);
+            try (OutputStream outputStream = exchange.getResponseBody()) {
+                outputStream.write(responseText.getBytes("UTF-8"));
+            }
+        }
+    }
 
     static class ReportAddHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if ("PUT".equalsIgnoreCase(exchange.getRequestMethod())) {
-                InputStream inputStream = exchange.getRequestBody();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder stringBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
+                try (InputStream inputStream = exchange.getRequestBody();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                    String requestBody = reader.lines().reduce("", String::concat);
+                    JSONObject jsonObject = new JSONObject(requestBody);
+                    Report report = JSONParser.jsonToReport(jsonObject);
 
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                Report report = JSONParser.jsonToReport(jsonObject);
-
-                ArrayList<ReportError> errors;
-                try (DBController dbController = new DBController()) {
-                    ReportController reportController = new ReportController(dbController);
-                    errors = reportController.addReport(report.getUser().getId(), report.getColors().toArray(new String[0]), report.getColors().toArray(new String[0]), report.getColors().toArray(new String[0]), report.getBreed(), report.getDescription(), report.getFoundDate(), report.getLocation(), report.getStatus());
-                } catch (SQLException e) {
-                    exchange.sendResponseHeaders(500, -1); // Internal Server Error
-                    return;
+                    ArrayList<ReportError> errors = reportService.addReport(report);
+                    if (errors.isEmpty()) {
+                        sendResponse(exchange, 200, "Report added successfully!");
+                    } else {
+                        String jsonResponse = JSONParser.parseReportErrors(errors).toString();
+                        sendResponse(exchange, 400, jsonResponse);
+                    }
                 }
-
-                if (errors.isEmpty()) {
-                    String response = "Report added successfully!";
-                    exchange.sendResponseHeaders(200, response.length());
-                    exchange.getResponseBody().write(response.getBytes());
-                } else {
-                    String response = JSONParser.parseReportErrors(errors).toString();
-                    exchange.sendResponseHeaders(400, response.length());
-                    exchange.getResponseBody().write(response.getBytes());
-                }
-                exchange.close();
             } else {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
             }
@@ -129,47 +185,19 @@ public class SimpleServer {
     static class UserUpdateHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if ("POST".equals(exchange.getRequestMethod())) {
-                // Получаем тело запроса
-                InputStream inputStream = exchange.getRequestBody();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder stringBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-                String requestBody = stringBuilder.toString();
-                System.out.println("Request body: " + requestBody);
+            if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try (InputStream inputStream = exchange.getRequestBody();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                    String requestBody = reader.lines().reduce("", String::concat);
+                    JSONObject jsonObject = new JSONObject(requestBody);
 
-                // Преобразуем строку в JSON
-                JSONObject jsonObject = new JSONObject(requestBody);
-
-                try (DBController dbController = new DBController()) {
-                    UserService userService = new UserService(dbController);
-
-                    // Вызываем метод добавления пользователя
-                    ArrayList<AddUserError> errors = userService.updateUser(userService.getUserById(jsonObject.getInt("userId")).getId(), jsonObject.getString("name"), jsonObject.getString("email"), jsonObject.getString("phone"), jsonObject.getString("password"), jsonObject.getString("address"));
-
-                    // Проверяем ошибки
+                    ArrayList<AddUserError> errors = userService.updateUser(JSONParser.jsonToUser(jsonObject));
                     if (!errors.isEmpty()) {
-                        JSONObject errorResponse = JSONParser.parseAddUserErrors(errors);
-                        String jsonResponse = errorResponse.toString();
-
-                        // Отправляем ошибки клиенту
-                        exchange.sendResponseHeaders(400, jsonResponse.length());
-                        OutputStream os = exchange.getResponseBody();
-                        os.write(jsonResponse.getBytes());
-                        os.close();
+                        String jsonResponse = JSONParser.parseAddUserErrors(errors).toString();
+                        sendResponse(exchange, 400, jsonResponse);
                     } else {
-                        // Успешная регистрация
-                        String response = "User update successfully!";
-                        exchange.sendResponseHeaders(200, response.length());
-                        OutputStream os = exchange.getResponseBody();
-                        os.write(response.getBytes());
-                        os.close();
+                        sendResponse(exchange, 200, "User updated successfully!");
                     }
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
                 }
             } else {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
@@ -180,18 +208,10 @@ public class SimpleServer {
     static class GetReportsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if ("GET".equals(exchange.getRequestMethod())) {
-                try (DBController dbController = new DBController()) {
-                    ReportController reportController = new ReportController(dbController);
-                    ArrayList<Report> reports = reportController.getAllReports();
-
-                    String jsonResponse = JSONParser.serializeReports(reports).toString();
-                    exchange.sendResponseHeaders(200, jsonResponse.length());
-                    exchange.getResponseBody().write(jsonResponse.getBytes());
-                } catch (SQLException e) {
-                    exchange.sendResponseHeaders(500, -1);
-                }
-                exchange.close();
+            if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                ArrayList<Report> reports = new ArrayList<>();
+                String jsonResponse = JSONParser.serializeReports(reports).toString();
+                sendResponse(exchange, 200, jsonResponse);
             } else {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
             }
@@ -201,8 +221,7 @@ public class SimpleServer {
     static class GetFilteredReportsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if ("GET".equals(exchange.getRequestMethod())) {
-                // Извлекаем параметры запроса
+            if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
                 String query = exchange.getRequestURI().getQuery();
                 Map<String, String> params = parseQuery(query);
 
@@ -211,23 +230,14 @@ public class SimpleServer {
                 String location = params.getOrDefault("location", null);
                 String breed = params.getOrDefault("breed", null);
 
-                try (DBController dbController = new DBController()) {
-                    ReportController reportController = new ReportController(dbController);
-                    ArrayList<Report> reports = reportController.getReportsByFilters(color, specialMark, location, breed);
-
-                    String jsonResponse = JSONParser.serializeReports(reports).toString();
-                    exchange.sendResponseHeaders(200, jsonResponse.length());
-                    exchange.getResponseBody().write(jsonResponse.getBytes());
-                } catch (SQLException e) {
-                    exchange.sendResponseHeaders(500, -1);
-                }
-                exchange.close();
+                ArrayList<Report> reports = reportService.getReportsByFilters(color, specialMark, location, breed);
+                String jsonResponse = JSONParser.serializeReports(reports).toString();
+                sendResponse(exchange, 200, jsonResponse);
             } else {
                 exchange.sendResponseHeaders(405, -1); // Method Not Allowed
             }
         }
 
-        // Вспомогательный метод для разбора параметров из строки запроса
         private Map<String, String> parseQuery(String query) {
             Map<String, String> params = new HashMap<>();
             if (query != null) {
@@ -242,4 +252,12 @@ public class SimpleServer {
         }
     }
 
+    private static void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
+        exchange.sendResponseHeaders(statusCode, response.length());
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

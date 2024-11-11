@@ -16,10 +16,10 @@ public class UserDaoFactory {
     }
 
     // Фабричный метод для создания UserDao
-    public UserDao createUserDao(final String type, final Connection connection) {
+    public UserDao  createUserDao(final String type, final Connection connection) {
         UserDao userDao;
         userDao = switch (type) {
-            case "postgres" -> new UserDaoPostgreSQL(connection);
+            case "postgres" -> new UserDaoPostgres(connection);
             case "fake" -> new UserDAOFake();
             default -> throw new
                     IllegalArgumentException("Unknown UserDao type: " + type);

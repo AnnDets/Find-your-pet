@@ -3,7 +3,6 @@ package utils;
 import models.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import utils.PasswordErrorType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -158,14 +157,13 @@ public class JSONParser {
 
     // Преобразование JSON в User
     public static User jsonToUser(JSONObject json) {
-        int user_id = json.getInt("user_id");
         String name = json.getString("name");
         String email = json.getString("email");
         String phone = json.getString("phone");
-        String password_hash = json.getString("password_hash");
+        String password = json.getString("password");
         String address = json.getString("address");
 
-        return new User(user_id, name, email, phone, password_hash, address);
+        return new User(0, name, email, phone, "",password, address);
     }
     // Преобразование JSON в Report
     public static Report jsonToReport(JSONObject json) {

@@ -1,55 +1,57 @@
 package services;
 
-import DBControllers.DBController;
+//import DBControllers.DBController;
+import dao.ReportDao;
+import dao.ReportDaoFactory;
+import dao.ReportDaoPostgres;
 import models.Report;
-import models.User;
 import utils.*;
+
+import java.sql.Connection;
 import java.util.ArrayList;
 
-public class ReportController {
-    private final DBController dbcontroller;
-
-    public ReportController(DBController dbController) {
-        this.dbcontroller = dbController;
+public class ReportService {
+    private final ReportDao reportDao;
+    public ReportService(Connection connection) {
+        ReportDaoFactory reportDaoFactory = ReportDaoFactory.getInstance();
+        reportDao = reportDaoFactory.createUserDao("postgres", connection);
     }
 
     // Добавление новой заявки о пропавшем животном
-    public ArrayList<ReportError> addReport(int userId, String[] colors, String[] specialMarks, String[] photos,
-                                            String breed, String description, String foundDate,
-                                            String location, String status) {
+    public ArrayList<ReportError> addReport(Report report) {
         ArrayList<ReportError> errors = new ArrayList<>();
 
-        LogUtil.debug("Validating report for user: " + userId);
+        LogUtil.debug("Validating report for user: " + report.getUser());
 
-        if (userId == 0 || Integer.toString(userId).trim().isEmpty()) {
+        if (report.getUser() == null) {
             errors.add(ReportError.MISSING_USER_ID);
             LogUtil.warn("Missing user ID");
         }
-        if (foundDate == null || foundDate.trim().isEmpty()) {
+        if (report.getFoundDate() == null || report.getFoundDate().trim().isEmpty()) {
             errors.add(ReportError.MISSING_FOUND_DATE);
             LogUtil.warn("Missing found date");
         }
-        if (location == null || location.trim().isEmpty()) {
+        if (report.getLocation() == null || report.getLocation().trim().isEmpty()) {
             errors.add(ReportError.MISSING_LOCATION);
             LogUtil.warn("Missing location");
         }
 
-        // Если есть ошибки, возвращаем их
         if (!errors.isEmpty()) {
             LogUtil.warn("Errors occurred while adding report: " + errors);
             return errors;
         }
 
         // Логируем успешное добавление заявки
-        dbcontroller.addReport(userId, breed, description, foundDate, location, status, colors, specialMarks, photos);
-        LogUtil.info("Report added successfully for user: " + userId);
+        reportDao.create(report);
+        LogUtil.info("Report added successfully for user: " + report.getUser());
         return new ArrayList<>();
     }
+
 
     // Проверка наличия заявки
     public boolean reportExists(int reportId) {
         LogUtil.debug("Checking if report exists with ID: " + reportId);
-        boolean exists = dbcontroller.getReportById(reportId) != null;
+        boolean exists = reportDao.getById(reportId) != null;
         if (exists) {
             LogUtil.info("Report found with ID: " + reportId);
         } else {
@@ -61,7 +63,7 @@ public class ReportController {
     // Получение заявки по ID
     public Report getReportById(int reportId) {
         LogUtil.debug("Fetching report by ID: " + reportId);
-        Report report = dbcontroller.getReportById(reportId);
+        Report report = reportDao.getById(reportId);
         if (report != null) {
             LogUtil.info("Report retrieved with ID: " + reportId);
         } else {
@@ -71,7 +73,7 @@ public class ReportController {
     }
     public ArrayList<Report> getReportsByFilters(String color, String specialMark, String location, String breed){
         LogUtil.debug("Fetching reports with filters:");
-        ArrayList<Report> reports = dbcontroller.getReportsByFilters(color, specialMark, location, breed);
+        ArrayList<Report> reports = reportDao.getReportsByFilters(color, specialMark, location, breed);
         if (!reports.isEmpty()) {
             LogUtil.info("заявки соответсвующие фильтру: " + reports);
         } else {
@@ -79,19 +81,19 @@ public class ReportController {
         }
         return reports;
     }
-    public void deleteReportById(int reportId) {
-        LogUtil.debug("Deleting report by ID: " + reportId);
-        boolean result = /*dbcontroller.deleteReport(reportId)*/true;
+    public void deleteReportById(Report report) {
+        LogUtil.debug("Deleting report: " + report);
+        boolean result = reportDao.delete(report);
         if (result) {
-            LogUtil.info("Report deleted successfully with ID: " + reportId);
+            LogUtil.info("Report deleted successfully with ID: " + report);
         } else {
-            LogUtil.error("Failed to delete report with ID: " + reportId, null);
+            LogUtil.error("Failed to delete report with ID: " + report, null);
         }
     }
 
-    public ArrayList<Report> getAllReports() {
+    public ArrayList<Object> getAllReports() {
         LogUtil.debug("Fetching all users");
-        return dbcontroller.getAllReports();
+        return reportDao.readAll();
     }
 
 

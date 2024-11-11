@@ -20,12 +20,6 @@ public class UserDAOFake extends UserDao {
     }
 
     @Override
-    public boolean logInUser(String login, String plainPassword) {
-        String storedPassword = readByLogin(login);
-        return storedPassword != null && PasswordUtils.checkPassword(plainPassword, storedPassword);
-    }
-
-    @Override
     public User readByID(int id) {
         return users.stream()
                 .filter(user -> user.getId() == id)
@@ -76,7 +70,7 @@ public class UserDAOFake extends UserDao {
     }
 
     @Override
-    public ArrayList<User> readAll() {
+    public ArrayList<Object> readAll() {
         return new ArrayList<>(users);
     }
 }

@@ -1,6 +1,6 @@
 package services;
 
-import dao.UserDAOFactory;
+import dao.UserDaoFactory;
 import dao.UserDao;
 import models.User;
 import utils.LogUtil;
@@ -10,10 +10,10 @@ import java.sql.Connection;
 import java.util.ArrayList;
 
 public class UserService {
-    private UserDao userDao;
-
+    private final UserDao userDao;
     public UserService(Connection connection) {
-        this.userDao = UserDAOFactory.createUserDao("fake", connection);
+        UserDaoFactory userDaoFactory = UserDaoFactory.getInstance();
+        userDao = userDaoFactory.createUserDao("postgres", connection);
     }
 
     public ArrayList<AddUserError> addUser(User user) {
@@ -30,18 +30,21 @@ public class UserService {
             errors.add(PhoneAndEmailError.INVALID_PHONE);
         }
 
-        ArrayList<PasswordErrorType> passwordErrors = PasswordUtils.validatePassword(user.getPasswordHash()); // кринж, нужен PlainPassword
+        ArrayList<PasswordErrorType> passwordErrors = PasswordUtils.validatePassword(user.getPlainPassword()); // кринж, нужен PlainPassword
         if (!passwordErrors.isEmpty()) {
             LogUtil.debug("Password validation failed for user: " + user.getEmail());
         }
         errors.addAll(passwordErrors);
 
+        if(userDao.read(user) != null){
+            errors.add(PhoneAndEmailError.EMAIL_ALREADY_EXISTS);
+        }
         if (errors.isEmpty()) {
             String hashedPassword = PasswordUtils.hashPassword(user.getPlainPassword());
+            user.setPasswordHash(hashedPassword);
             boolean success = userDao.create(user);
             if (!success) {
-                LogUtil.error("user already exists with email: " + user.getEmail(), null);
-                errors.add(PhoneAndEmailError.EMAIL_ALREADY_EXISTS);
+                LogUtil.error("", null);
             } else {
                 LogUtil.info("user successfully registered: " + user.getEmail());
             }
@@ -54,7 +57,7 @@ public class UserService {
 
     public boolean authenticateUser(String email, String plainPassword) {
         LogUtil.debug("Authenticating user: " + email);
-        String storedHashedPassword = userDao.getUserPasswordByEmail(email);
+        String storedHashedPassword = ((User)userDao.readByLogin(email)).getPasswordHash();
         if (storedHashedPassword != null) {
             boolean isAuthenticated = PasswordUtils.checkPassword(plainPassword, storedHashedPassword);
             if (isAuthenticated) {
@@ -73,28 +76,38 @@ public class UserService {
         LogUtil.debug("Updating user: id=" + user.getId() + ", email=" + user.getEmail());
         ArrayList<AddUserError> errors = new ArrayList<>();
 
-        if (!PhoneAndEmailValidator.isEmailValid(email)) {
-            LogUtil.warn("Invalid email for update: " + email);
+        // Проверка email
+        if (!PhoneAndEmailValidator.isEmailValid(user.getEmail())) {
+            LogUtil.warn("Invalid email for update: " + user.getEmail());
             errors.add(PhoneAndEmailError.INVALID_EMAIL);
         }
-        if (!PhoneAndEmailValidator.isValidNumber(phone, address)) {
-            LogUtil.warn("Invalid phone for update: " + phone);
+
+        // Проверка номера телефона
+        if (!PhoneAndEmailValidator.isValidNumber(user.getPhone(), user.getAddress())) {
+            LogUtil.warn("Invalid phone for update: " + user.getPhone());
             errors.add(PhoneAndEmailError.INVALID_PHONE);
         }
 
-        ArrayList<PasswordErrorType> passwordErrors = PasswordUtils.validatePassword(plainPassword);
-        errors.addAll(passwordErrors);
+        // Проверка пароля
+        ArrayList<PasswordErrorType> passwordErrors = PasswordUtils.validatePassword(user.getPlainPassword());
+        if (!passwordErrors.isEmpty()) {
+            LogUtil.warn("Invalid password for update.");
+            errors.addAll(passwordErrors);
+        }
 
+        // Если ошибок нет, обновляем пользователя
         if (errors.isEmpty()) {
-            String hashedPassword = PasswordUtils.hashPassword(plainPassword);
+            String hashedPassword = PasswordUtils.hashPassword(user.getPlainPassword());
+            user.setPasswordHash(hashedPassword); // Обновляем пароль пользователя на хешированный
             userDao.update(user);
-            LogUtil.info("User updated successfully: id=" + id + ", email=" + email);
+            LogUtil.info("User updated successfully: id=" + user.getId() + ", email=" + user.getEmail());
         } else {
             LogUtil.debug("User update failed due to validation errors");
         }
 
         return errors;
     }
+
 
     public boolean deleteUser(User user) {
         LogUtil.debug("Deleting user: id=" + user.getId());

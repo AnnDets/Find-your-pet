@@ -9,6 +9,6 @@ public interface DAO {
     boolean update(Object object);
     boolean delete(Object object);
     Object read(Object object);
-    ArrayList<User> readAll();
+    ArrayList<Object> readAll();
 
 }
