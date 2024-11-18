@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="C:\Users\Dasha\Find your pet\logo.png" />
+    <title>Find your pet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Я нашёл животное</h2>
+
+<div>
+    <span class="styled-text">Прикрепите фото:</span>
+    <span class="styled-redtext">*</span>
+    <input type="file" id="photo" accept="image/*"/>
+</div>
+
+<div>
+    <span class="styled-text">Кличка:</span>
+    <input type="text" id="petname" placeholder="Кличка">
+</div>
+
+<div>
+    <span class="styled-text">Цвет:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="color" placeholder="Цвет">
+</div>
+
+<div>
+    <span class="styled-text">Порода:</span>
+    <input type="text" id="breed" placeholder="Порода">
+</div>
+
+<div>
+    <span class="styled-text">Животное:</span>
+    <span class="styled-redtext">*</span>
+    <select id="pet">
+        <option value="cat">Кот</option>
+        <option value="dog">Собака</option>
+        <option value="other">Другое</option>
+    </select>
+    <input type="text" id="pet" placeholder="Животное">
+</div>
+
+<div>
+    <span class="styled-text">Пол:</span>
+    <span class="styled-redtext">*</span>
+    <select id="gender">
+        <option value="boy">Мальчик</option>
+        <option value="girl">Девочка</option>
+        <option value="other">Другое</option>
+    </select>
+</div>
+
+<div>
+    <span class="styled-text">Дата нахождения:</span>
+    <span class="styled-redtext">*</span>
+    <input type="date" id="finddate" placeholder="Дата нахождения">
+</div>
+
+<div>
+    <span class="styled-text">Наличие аксессуаров:</span>
+    <span class="styled-redtext">*</span>
+    <select id="accessory">
+        <option value="no">Нет</option>
+        <option value="yes">Да</option>
+    </select>
+    <input type="text" id="accessory" placeholder="Наличие аксессуаров">
+</div>
+
+<div>
+    <span class="styled-text">Дополнительная информация:</span>
+    <input type="text" id="info" placeholder="Дополнительная информация">
+</div>
+
+<div>
+    <span class="styled-redtext">Поля со * являются обязательными</span>
+</div>
+
+<button id="safe" class="styled-text">Сохранить</button>
+
+<div class="error" id="errorMessage">Ошибка: Пожалуйста, заполните все обязательные поля.</div>
+
+<p id="errorMessage" class="error"></p>
+
+<script src="find.js"></script>
+</body>
+</html>
