@@ -1,0 +1,38 @@
+//npm install --save-dev jest
+jest.mock('window.location.href', () => ({
+    assign: jest.fn(),
+}));
+
+describe('Registration Page Tests', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <button id="register">Register</button>
+      <input type="text" id="username" />
+      <input type="text" id="adress" />
+      <input type="text" id="telephone" />
+      <input type="email" id="email" />
+      <input type="password" id="password" />
+      <input type="password" id="repassword" />
+      <input type="checkbox" id="agreement" />
+      <div id="errorMessage" style="display: none;">Error</div>
+      <div id="errorMessage2" style="display: none;">Password mismatch</div>
+      <div id="errorMessage3" style="display: none;">Agreement not checked</div>
+    `;
+  });
+
+  test('Successful registration', () => {
+    document.getElementById('username').value = 'testuser';
+    document.getElementById('adress').value = 'testaddress';
+    document.getElementById('telephone').value = '1234567890';
+    document.getElementById('email').value = 'test@example.com';
+    document.getElementById('password').value = 'password';
+    document.getElementById('repassword').value = 'password';
+    document.getElementById('agreement').checked = true;
+    const registerButton = document.getElementById('register');
+    fireEvent.click(registerButton);
+    expect(window.location.assign).toHaveBeenCalledWith('home.html');
+    expect(document.getElementById('errorMessage').style.display).toBe('none');
+  });
+
+  // потом добавлю еще тестов для других случаев
+});
