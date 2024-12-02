@@ -1,0 +1,42 @@
+jest.mock('window.location.href', () => ({
+    assign: jest.fn(),
+}));
+
+describe('Find Page Tests', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <button id="safe">Save</button>
+      <input type="text" id="photo" />
+      <input type="text" id="petname" />
+      <input type="text" id="color" />
+      <input type="text" id="breed" />
+      <input type="text" id="pet" />
+      <input type="text" id="gender" />
+      <input type="checkbox" id="finddate" />
+      <input type="checkbox" id="accessory" />
+      <input type="checkbox" id="info" />
+      <div id="errorMessage" style="display: none;">Error</div>
+    `;
+  });
+
+  test('Successful submission', () => {
+    document.getElementById('photo').value = 'photo';
+    document.getElementById('pet').value = 'pet';
+    document.getElementById('color').value = 'color';
+    document.getElementById('gender').value = 'gender';
+    document.getElementById('finddate').checked = true;
+    document.getElementById('accessory').checked = true;
+    const saveButton = document.getElementById('safe');
+    fireEvent.click(saveButton);
+    expect(window.location.assign).toHaveBeenCalledWith('home.html');
+    expect(document.getElementById('errorMessage').style.display).toBe('none');
+  });
+
+
+  test('Unsuccessful submission (missing fields)', () => {
+    const saveButton = document.getElementById('safe');
+    fireEvent.click(saveButton);
+    expect(document.getElementById('errorMessage').style.display).toBe('block');
+    expect(window.location.assign).not.toHaveBeenCalled();
+  });
+});
