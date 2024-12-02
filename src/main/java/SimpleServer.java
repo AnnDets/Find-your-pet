@@ -29,15 +29,6 @@ public class SimpleServer {
     private static UserService userService;
     private static ReportService reportService;
 
-    static {
-        try {
-            Connection connection = DriverManager.getConnection(JDBC_URL, DB_USERNAME, DB_PASSWORD);
-            userService = new UserService(connection);
-            reportService = new ReportService(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException("Error initializing database connection", e);
-        }
-    }
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
@@ -49,6 +40,13 @@ public class SimpleServer {
         server.createContext("/login", new LoginHandler());
         server.setExecutor(null);
         server.start();
+        try {
+            Connection connection = DriverManager.getConnection(JDBC_URL, DB_USERNAME, DB_PASSWORD);
+            userService = new UserService(connection);
+            reportService = new ReportService(connection);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error initializing database connection", e);
+        }
         System.out.println("Server started on port 8080");
     }
 

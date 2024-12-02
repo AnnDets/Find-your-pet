@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="../logo.png" />
+    <title>Find your pet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Регистрация</h2>
+
+<div>
+    <span class="styled-text">Введите ваше имя:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="username" placeholder="Имя">
+</div>
+
+<div>
+    <span class="styled-text">Введите ваш адрес:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="adress" placeholder="Адрес">
+</div>
+
+<div>
+    <span class="styled-text">Введите ваш телефон:</span>
+    <span class="styled-redtext">*</span>
+    <input type="number" id="telephone" placeholder="Телефон">
+</div>
+
+<div>
+    <span class="styled-text">Введите ваш email:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="email" placeholder="Email">
+</div>
+
+<div>
+    <span class="styled-text">Введите пароль:</span>
+    <span class="styled-redtext">*</span>
+    <input type="password" id="password" placeholder="Пароль">
+</div>
+
+<div>
+    <span class="styled-text">Повторите пароль:</span>
+    <span class="styled-redtext">*</span>
+    <input type="password" id="repassword" placeholder="Повторите пароль">
+</div>
+  
+<div>
+    <span class="styled-redtext">Поля со * являются обязательными</span>
+</div>
+<label>
+    <input type="checkbox" id="agreement">
+    Я согласен с условиями
+</label>
+
+<button id="register" class="styled-text">Зарегистрироваться</button>
+
+<div class="error" id="errorMessage">Ошибка: Пожалуйста, заполните все поля.</div>
+<div class="error" id="errorMessage2">Ошибка: Пароль не совпадает.</div>
+<div class="error" id="errorMessage3">Ошибка: Согласитесь с политикой конфиденциальности.</div>
+
+<p id="errorMessage" class="error"></p>
+<script>
+    const BASE_URL = 'http://localhost:8080/find-your-pet';
+</script>
+<script src="registration.js"></script>
+</body>
+</html>

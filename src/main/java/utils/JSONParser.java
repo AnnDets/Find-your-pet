@@ -157,7 +157,7 @@ public class JSONParser {
 
     // Преобразование JSON в User
     public static User jsonToUser(JSONObject json) {
-        String name = json.getString("name");
+        String name = json.getString("username");
         String email = json.getString("email");
         String phone = json.getString("phone");
         String password = json.getString("password");

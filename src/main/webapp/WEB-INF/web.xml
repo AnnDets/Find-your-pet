@@ -1,0 +1,11 @@
+<web-app>
+    <servlet>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>RegisterServlet</servlet-class>
+
+    </servlet>
+    <welcome-file-list>
+        <welcome-file>registration.html</welcome-file>
+    </welcome-file-list>
+    <!-- Добавьте аналогичные настройки для других сервлетов -->
+</web-app>
