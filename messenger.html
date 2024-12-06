@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат</title>
+  <link rel="stylesheet" href="messenger.css">
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Боковая панель с пользователями -->
+    <div class="user-list">
+      <div class="user-item" onclick="switchUser('user1')">
+        <img src="https://via.placeholder.com/40?text=A" alt="User A" class="user-avatar">
+        <span class="user-name">Анна</span>
+      </div>
+      <div class="user-item" onclick="switchUser('user2')">
+        <img src="https://via.placeholder.com/40?text=B" alt="User B" class="user-avatar">
+        <span class="user-name">Дарья</span>
+      </div>
+      <div class="user-item" onclick="switchUser('user3')">
+        <img src="https://via.placeholder.com/40?text=C" alt="User C" class="user-avatar">
+        <span class="user-name">Степан</span>
+      </div>
+    </div>
+
+    <div class="chat-content">
+      <div class="chat-header" id="chat-header">
+        <img src="https://via.placeholder.com/40?text=B" alt="Другой пользователь" class="header-avatar">
+        <span class="header-name">Другой пользователь</span>
+      </div>
+
+      <div class="chat-history" id="chat-history"></div>
+      <div class="chat-footer">
+        <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+        <label for="avatar-upload" class="avatar-label">Выбрать аватар</label>
+        <input type="file" id="file-upload" accept="image/*, .pdf, .doc, .txt, .mp3, .mp4" style="display:none;" onchange="handleFileUpload(event)">
+        <label for="file-upload" class="file-label">Прикрепить файл</label>
+        <input type="text" id="message-input" placeholder="Введите сообщение..." autocomplete="off">
+        <button id="send-btn">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="messenger.js"></script>
+</body>
+</html>
