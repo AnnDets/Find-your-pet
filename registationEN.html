@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="logo.png" />
+    <title>Find your pet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Registration</h2>
+
+<div>
+    <span class="styled-text">Enter your name:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="username" placeholder="name">
+</div>
+
+<div>
+    <span class="styled-text">Enter your address:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="adress" placeholder="address">
+</div>
+
+<div>
+    <span class="styled-text">Enter your phone:phone</span>
+    <span class="styled-redtext">*</span>
+    <input type="number" id="telephone" placeholder="phone">
+</div>
+
+<div>
+    <span class="styled-text">Enter your email:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="email" placeholder="Email">
+</div>
+
+<div>
+    <span class="styled-text">Enter password:</span>
+    <span class="styled-redtext">*</span>
+    <input type="password" id="password" placeholder="password">
+</div>
+
+<div>
+    <span class="styled-text">Repeat password:</span>
+    <span class="styled-redtext">*</span>
+    <input type="password" id="repassword" placeholder="Repeat password">
+</div>
+  
+<div>
+    <span class="styled-redtext">Fields with * are required</span>
+</div>
+<label>
+    <input type="checkbox" id="agreement">
+    I agree to the terms
+</label>
+
+<button id="register" class="styled-text">Register</button>
+
+<div class="error" id="errorMessage">Error: Please fill out all fields.</div>
+<div class="error" id="errorMessage2">Error: Password does not match.</div>
+<div class="error" id="errorMessage3">Error: Agree to the privacy policy.</div>
+
+<p id="errorMessage" class="error"></p>
+
+<script src="registration.js"></script>
+</body>
+</html>
