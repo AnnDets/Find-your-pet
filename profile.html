@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="logo.png" />
+    <title>Find your pet</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+
+<div class="box" id="one">
+    <span class="styled-headtext">Мой профиль:</span>
+    <button id="Myfoto" class="image-button" style="background-image: url('princess.jpg'); "></button>
+    <input type="file" id="fileInput" accept="image/*">
+    <div>
+        <span class="styled-text">Имя:</span>
+        <input type="text" id="username" placeholder="Принцесса">
+    </div>
+    
+    <div>
+        <span class="styled-text">Телефон:</span>
+        <input type="number" id="telephone" placeholder="+375291234567">
+    </div>
+    
+    <div>
+        <span class="styled-text">Email:</span>
+        <input type="text" id="email" placeholder="Princess@hotmail.com">
+    </div>
+
+    <div>
+        <span class="styled-text">Адрес:</span>
+        <input type="number" id="adress" placeholder="Тридевятое царство">
+    </div>
+
+    <button id="Redact" class="styled-text" >Редактировать</button>
+
+</div>
+
+<div class="box" id="two">
+    <button class="button" id="MainPage">Главная страница</button>
+    <button class="button" id="Chat">Чат</button>
+    <button class="button" id="Filter">Фильтр</button>
+    <button class="button" id="My_listing">Мои объявления</button>
+    <button class="button" id="Instruction">Инструкция по поиску</button>
+    <button class="button" id="About_us">О нас</button>
+    <button class="button" id="Exit">Выход</button>
+</div>
+
+<div class="error" id="errorMessage">Ошибка: Пожалуйста, заполните все поля.</div>
+<p id="errorMessage" class="error"></p>
+
+<script src="profile.js"></script>
+</body>
+</html>
