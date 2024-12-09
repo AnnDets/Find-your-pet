@@ -1,0 +1,100 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #fcdba0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.container {
+    background-color: #fCDBA0;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    display: none;
+}
+
+.image-button {
+    width: 300px;
+    height: 300px;
+    border: none;
+    cursor: pointer;
+    margin: 70px 0;
+    background-repeat: no-repeat;
+}
+
+.button {
+    width: 100%; /* Ширина кнопки */
+    height: 10%; /* Высота кнопки */
+    background-color: transparent; /* Цвет фона */
+    color: #000000; /* Белый цвет текста */
+    font-size: 1.7em; /* Размер текста */
+    margin-bottom: 1%; /* Отступ снизу */
+    margin-top: 3%;
+    border: 2px solid #333; /* Параметры рамки */
+    border-radius: 0.4em;
+    cursor: pointer;
+}
+
+.styled-text {
+    font-size: 28px;
+    color: #000000;
+    margin: 10px 5px;
+}
+
+.text {
+    font-size: 18px;
+    color: #000000;
+    margin: 10px 5px;
+}
+
+
+.styled-headtext {
+    font-size: 38px;
+    color: #000000;
+    margin: 10px 0;
+}
+
+select, input[type="text"], input[type="password"], input[type="number"] {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+.checkbox-label {
+    font-size: 14px;
+    color: #555;
+    margin-left: 8px;
+}
+
+#one {
+    position: absolute;
+    top: 2%;
+    left: 1%;
+    width: 70%;
+    height: 96%;
+    background: #fCDBA0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#two {
+    position: absolute;
+    top: 2%;
+    right: 1%;
+    width: 27%;
+    height: 96%;
+    background: #fCDBA0;
+}
