@@ -147,3 +147,10 @@ select, input[type="text"], input[type="password"], input[type="number"] {
     height: 33%;
     background: #fCDBA0;
 }
+
+#languageSwitcher {
+    display: block; /* Гарантирует, что элемент видим */
+    margin: 1px;   /* Добавляет отступ для удобства */
+    z-index: 1000;  /* Приоритет отображения над другими элементами */
+    left: 50px;
+}
