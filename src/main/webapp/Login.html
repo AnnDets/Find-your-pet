@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        .error {
+            color: red;
+        }
+        .styled-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .styled-redtext {
+            color: red;
+        }
+        div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <span class="styled-text">Введите ваше имя:</span>
+    <span class="styled-redtext">*</span>
+    <input type="text" id="username" placeholder="Имя">
+</div>
+
+<div>
+    <span class="styled-text">Введите ваш адрес:</span>
+    <span class="styled-redtext">*</span>
+    <input type="password" id="password" placeholder="Пароль">
+</div>
+<button id="login" class="styled-text">Войти</button>
+<p id="errorMessage" class="error"></p>
+<script src="Login.js"></script>
+</body>
+</html>
