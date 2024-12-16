@@ -106,6 +106,22 @@ document.getElementById('Exit').addEventListener('click', function() {
     window.location.href = 'homeguest.html';
 });
 
+// Установить cookie
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
+}
+
+// Получить значение cookie
+function getCookie(name) {
+    const cookies = document.cookie.split("; ");
+    for (let cookie of cookies) {
+        const [key, value] = cookie.split("=");
+        if (key === name) return value;
+    }
+    return null;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     const langData = {
@@ -142,12 +158,17 @@ document.addEventListener("DOMContentLoaded", () => {
             errorMessage: "Error: Please fill in all fields."
         }
     };
+        
+const savedLang = getCookie("lang");
+    if (savedLang) {
+        languageSwitcher.value = savedLang; // Устанавливаем значение переключателя
+    }
 
     const languageSwitcher = document.getElementById("languageSwitcher");
 
     const updateLanguage = () => {
         const currentLang = languageSwitcher.value;
-
+        setCookie("lang", currentLang, 30); 
         // Обновляем заголовок профиля
         document.querySelector("#one .styled-headtext").textContent = langData[currentLang].profileTitle;
 
