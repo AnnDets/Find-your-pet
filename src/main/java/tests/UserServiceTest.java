@@ -1,267 +1,167 @@
-/*
 package tests;
 
-import DBControllers.DBController;
+import dao.UserDao;
+import dao.UserDaoFactory;
 import models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import services.ReportController;
+import org.mockito.Mockito;
+import org.mockito.stubbing.OngoingStubbing;
 import services.UserService;
 import utils.*;
 
-import dao.*;
-
+import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class UserServiceTest {
+public class UserServiceTest {
 
     private UserService userService;
-    private DBController dbController;
+    private UserDao userDaoMock;
+    private Connection connectionMock;
 
-    @BeforeEach
-    void setUp() {
-        dbController = mock(DBController.class);
-        userService = new UserService(ReportController);
-    }
-
-    //Проверяет, что при вводе корректных данных функция addUser возвращает пустой список ошибок.
-    @Test
-    void testAddUserValidData() {
-        // Arrange
-        User user= new User(1,"Test User","test23@example.com",
+    void testAddUser_validUser() {
+        User validUser = new User(1,"Test User","invalid-email",
                 "1234567890", "Pewrvrvg#d135","Test Address");
 
-        when(UserDao.create(user)).thenReturn(true);
+        when(PhoneAndEmailValidator.isEmailValid(validUser.getEmail())).thenReturn(true);
+        when(PhoneAndEmailValidator.isValidNumber(validUser.getPhone(), validUser.getAddress())).thenReturn(true);
 
-        ArrayList<AddUserError> errors = userService.addUser(user);
+        // Создаем пустой список ошибок
+        ArrayList<PasswordErrorType> emptyErrors = new ArrayList<>();
+        when(PasswordUtils.validatePassword(validUser.getPlainPassword())).thenReturn(emptyErrors);
+
+        when(userDaoMock.read(validUser)).thenReturn(null);
+        when(userDaoMock.create(validUser)).thenReturn(true);
+
+        ArrayList<AddUserError> errors = userService.addUser(validUser);
 
         assertTrue(errors.isEmpty());
-        verify(UserDao, times(1)).create(user);
-
+        verify(userDaoMock, times(1)).create(validUser);
     }
 
-    //Проверяет, что при вводе некорректного адреса электронной почты функция addUser возвращает ошибку INVALID_EMAIL.
     @Test
-    void testAddUserInvalidEmail() {
-        User user= new User(2,"Test User","invalid-email",
+    void testAddUser_invalidEmail() {
+        User invalidEmailUser = new User(1,"Test User","invalid-email",
                 "1234567890", "Pewrvrvg#d135","Test Address");
 
-        // Act
-        ArrayList<AddUserError> errors = userService.addUser(user);
+        when(PhoneAndEmailValidator.isEmailValid(invalidEmailUser.getEmail())).thenReturn(false);
 
-        //assertEquals(1, errors.size());
+        ArrayList<AddUserError> errors = userService.addUser(invalidEmailUser);
+
+        assertFalse(errors.isEmpty());
         assertTrue(errors.contains(PhoneAndEmailError.INVALID_EMAIL));
-        verify(UserDao, never()).create(user);
+        verify(userDaoMock, never()).create(any(User.class));
     }
 
-
-    //Проверяет, что при вводе некорректного номера телефона функция addUser возвращает ошибку INVALID_PHONE.
     @Test
-    void testAddUserInvalidPhone() {
-        User user= new User(3,"Test User","test23@example.com",
-                "invalid-phone", "Pewrvrvg#d135","Test Address");
+    void testAuthenticateUser_success() {
+        String email = "john.doe@example.com";
+        String plainPassword = "password123";
+        String hashedPassword = "hashedPassword123";
 
-        // Act
-        ArrayList<AddUserError> errors = userService.addUser(user);
-
-        //assertEquals(1, errors.size());
-        assertTrue(errors.contains(PhoneAndEmailError.INVALID_PHONE));
-        verify(UserDao, never()).create(user);
-    }
-
-    //Проверяет, что при вводе некорректного пароля функция addUser возвращает соответствующие ошибки валидации пароля.
-    @SuppressWarnings("checkstyle:MethodName")
-    @Test
-    void testAddUserInvalidPassword() {
-        User user= new User(4,"Test User","test23@example.com",
-                "1234567890", "pas123","Test Address");
-
-        ArrayList<AddUserError> errors = userService.addUser(user);
-
-        //assertEquals(1, errors.size());
-        assertTrue(errors.contains(PasswordErrorType.TOO_SHORT));
-        verify(UserDao, never()).create(user);
-    }
-
-    //Проверяет, что при попытке добавить пользователя с уже существующим адресом электронной почты функция addUser возвращает ошибку EMAIL_ALREADY_EXISTS.
-    @Test
-    void testAddUserEmailAlreadyExists() {
-        User user= new User(5,"Test User","test23@example.com",
+        User mockUser = new User(1,"Test User","user@mail.com",
                 "1234567890", "Pewrvrvg#d135","Test Address");
+        mockUser.setPasswordHash(hashedPassword);
 
-        ArrayList<AddUserError> errors = userService.addUser(user);
+        when(userDaoMock.readByLogin(email)).thenReturn(mockUser);
+        when(PasswordUtils.checkPassword(plainPassword, hashedPassword)).thenReturn(true);
 
-        assertTrue(errors.contains(PhoneAndEmailError.EMAIL_ALREADY_EXISTS));
-        verify(UserDao, never()).create(user);
+        boolean isAuthenticated = userService.authenticateUser(email, plainPassword);
+
+        assertTrue(isAuthenticated);
     }
 
-    //Проверяет, что при вводе корректных учетных данных функция authenticateUser возвращает true.
     @Test
-    void testAuthenticateUserSuccess() {
-        String email = "test23@example.com";
-        String plainPassword = "Pewrvrvg#d135";
-        String hashedPassword = PasswordUtils.hashPassword(plainPassword);
+    void testAuthenticateUser_wrongPassword() {
+        String email = "john.doe@example.com";
+        String plainPassword = "wrongPassword";
+        String hashedPassword = "hashedPassword123";
 
-        when(dbController.getUserPasswordByEmail(email)).thenReturn(hashedPassword);
-        // Act
-        boolean success = userService.authenticateUser(email, plainPassword);
-        // Assert
-        assertTrue(success);
-        verify(dbController).getUserPasswordByEmail(email);
-    }
+        User mockUser = new User(1,"Test User","invalid-email",
+                "1234567890", "Pewrvrvg#d135","Test Address");
+        mockUser.setPasswordHash(hashedPassword);
 
-    //Проверяет, что authenticateUser возвращает false, если введенный пароль не совпадает с хэшированным паролем, хранящимся в базе данных.
-    @Test
-    void testAuthenticateUserInvalidPassword() {
-        String email = "test23@example.com";
-        String plainPassword = "Pewrvrvg#d135";
-        String hashedPassword = PasswordUtils.hashPassword(plainPassword);
-
-        when(dbController.getUserPasswordByEmail(email)).thenReturn(hashedPassword);
-
-        // Act
-        boolean success = userService.authenticateUser(email, plainPassword);
-
-        // Assert
-        assertFalse(success);
-        verify(dbController).getUserPasswordByEmail(email);
-
-
-        */
-/*when(userDao.getUserPasswordByEmail(email)).thenReturn(hashedPassword);
+        when(userDaoMock.readByLogin(email)).thenReturn(mockUser);
         when(PasswordUtils.checkPassword(plainPassword, hashedPassword)).thenReturn(false);
 
         boolean isAuthenticated = userService.authenticateUser(email, plainPassword);
 
         assertFalse(isAuthenticated);
-        verify(userDao, times(1)).getUserPasswordByEmail(email);
-        verify(PasswordUtils, times(1)).checkPassword(plainPassword, hashedPassword);*//*
-
     }
 
-
-    //Проверяет аутентификацию несуществующего пользователя.
     @Test
-    void testAuthenticateUserNotFound() {
-        String email = "john.doe@example.com";
-        String plainPassword = "password";
-        when(UserDao.getUserPasswordByEmail(email)).thenReturn(null);
+    void testUpdateUser_validData() {
+        // Создаем тестового пользователя с валидными данными
+        User validUser = new User(1, "Test User", "test@example.com",
+                "1234567890", "Pewrvrvg#d135", "Test Address");
 
-        boolean isAuthenticated = userService.authenticateUser(email, plainPassword);
+        // Моки для валидации email, телефона и пароля
+        when(PhoneAndEmailValidator.isEmailValid(validUser.getEmail())).thenReturn(true);
+        when(PhoneAndEmailValidator.isValidNumber(validUser.getPhone(), validUser.getAddress())).thenReturn(true);
 
-        assertFalse(isAuthenticated);
-        verify(UserDao, times(1)).getUserPasswordByEmail(email);
-        verify(PasswordUtils, never()).checkPassword(plainPassword, anyString());
-    }
+        // Пустой список ошибок для пароля
+        ArrayList<PasswordErrorType> emptyErrors = new ArrayList<>();
+        when(PasswordUtils.validatePassword(validUser.getPlainPassword())).thenReturn(emptyErrors);
 
+        // Вызов метода
+        ArrayList<AddUserError> errors = userService.updateUser(validUser);
 
-    //Проверить, что updateUser не возвращает ошибок, если переданы валидные данные пользователя.
-    @Test
-    void testUpdateUserValidData() {
-        User user= new User(1,"Test User","test23@example.com",
-                "1234567890", "Pewrvrvg#d135","Test Address");
-
-        // Act
-        ArrayList<AddUserError> errors = userService.updateUser(user);
-
-        // Assert
+        // Проверяем, что ошибок нет
         assertTrue(errors.isEmpty());
-        //verify(dbController).updateUserInDB(user);
+
+        // Проверяем, что метод update был вызван
+        String hashedPassword = PasswordUtils.hashPassword(validUser.getPlainPassword());
+        validUser.setPasswordHash(hashedPassword); // Обновляем объект для проверки
+        verify(userDaoMock, times(1)).update(validUser);
     }
 
-    //Проверить, что updateUser возвращает ошибку INVALID_EMAIL, если передан некорректный email.
+
     @Test
-    void testUpdateUserInvalidEmail() {
-        User user= new User(1,"Test User","invalid-email",
+    void testDeleteUser_success() {
+        User userToDelete = new User(1,"Test User","invalid-email",
                 "1234567890", "Pewrvrvg#d135","Test Address");
-        ArrayList<AddUserError> errors = userService.updateUser(user);
+        userToDelete.setId(1);
 
-        assertEquals(1, errors.size());
-        assertTrue(errors.contains(PhoneAndEmailError.INVALID_EMAIL));
-        verify(UserDao, never()).update(user);
-        }
+        when(userDaoMock.delete(userToDelete)).thenReturn(true);
 
-    //Проверить, что updateUser возвращает ошибку INVALID_PHONE, если передан некорректный номер телефона
-    @Test
-    void testUpdateUserInvalidPhone() {
-        User user= new User(1,"Test User","test23@example.com",
-                "invalid-phone", "Pewrvrvg#d135","Test Address");
-        ArrayList<AddUserError> errors = userService.updateUser(user);
+        boolean result = userService.deleteUser(userToDelete);
 
-        assertEquals(1, errors.size());
-        assertTrue(errors.contains(PhoneAndEmailError.INVALID_PHONE));
-        verify(UserDao, never()).update(user);
-    }
-
-    //Проверить, что updateUser возвращает ошибки, связанные с паролем, если передан некорректный пароль.
-    @Test
-    void testUpdateUserInvalidPassword() {
-        User user= new User(1,"Test User","test23@example.com",
-                "1234567890", "Pewrvrvg#d135","Test Address");
-
-        ArrayList<AddUserError> errors = userService.updateUser(user);
-
-        assertEquals(1, errors.size());
-        assertTrue(errors.contains(PasswordErrorType.TOO_SHORT));
-        verify(UserDao, never()).update(user);
-    }
-
-    // Проверяет, что функция deleteUser удаляет пользователя.
-    @Test
-    void testDeleteUserSuccess() {
-        User user= new User(1,"Test User","test23@example.com",
-                "1234567890", "Pewrvrvg#d135","Test Address");
-
-        userService.deleteUser(user);
-        // Assert
-        boolean result = userService.deleteUser(user);
         assertTrue(result);
-        verify(UserDao, times(1)).delete(user);
+        verify(userDaoMock, times(1)).delete(userToDelete);
     }
 
-    //Проверяет неудачное удаление пользователя.
-    @Test
-    void testDeleteUserFailed() {
-        User user= new User(1,"Test User","test23@example.com",
-                "1234567890", "Pewrvrvg#d135","Test Address");
-
-        userService.deleteUser(user);
-        // Assert
-        boolean result = userService.deleteUser(user);
-        assertTrue(result);
-        verify(UserDao, times(1)).delete(user);
-    }
-
-    //Проверяет, что функция getUserById возвращает пользователя по его идентификатору.
     @Test
     void testGetUserById() {
-        // Arrange
-        int userId = 1;
-        User user= new User(1,"Test User","test23@example.com",
-                "1234567890", "Pewrvrvg#d135","Test Address");when(dbController.getUserFromDB(userId)).thenReturn(user);
+        User user= new User(1,"Test User","invalid-email",
+                "1234567890", "Pewrvrvg#d135","Test Address");
+        User mockUser = user;
+        mockUser.setId(1);
 
-        // Act
-        User returnedUser = userService.getUserById(user);
+        when(userDaoMock.read(mockUser)).thenReturn(mockUser);
 
-        // Assert
-        assertEquals(user, returnedUser);
-        verify(dbController).getUserFromDB(userId);
+        User fetchedUser = userService.getUserById(mockUser);
+
+        assertNotNull(fetchedUser);
+        assertEquals(mockUser.getId(), fetchedUser.getId());
     }
 
-    //Проверяет, что функция getAllUsers возвращает всех пользователей
     @Test
     void testGetAllUsers() {
-        List<Object> users = new ArrayList<>();
-        when(UserService.getAllUsers()).thenReturn(users);
+        List<Object> mockUsers = new ArrayList<>();
+        User user= new User(1,"Test User","invalid-email",
+                "1234567890", "Pewrvrvg#d135","Test Address");
+        mockUsers.add(user);
 
-        List<Object> fetchedUsers = userService.getAllUsers();
+        when(userDaoMock.readAll()).thenReturn((ArrayList<Object>) mockUsers);
 
-        assertEquals(users, fetchedUsers);
-        verify(userDao, times(1)).readAll();
+        ArrayList<Object> users = userService.getAllUsers();
+
+        assertNotNull(users);
+        assertEquals(1, users.size());
     }
-}*/
+}
