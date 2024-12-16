@@ -12,12 +12,13 @@ public class Report {
     private String foundDate;
     private String location;
     private String status;
+    private String species;
 
     public ArrayList<String> getPhotos() {
         return photos;
     }
 
-    public Report(int id, User user, ArrayList<String> colors, ArrayList<String> specialMarks, ArrayList<String> photos, String breed, String description, String foundDate, String location, String status) {
+    public Report(int id, User user, String species, ArrayList<String> colors, ArrayList<String> specialMarks, ArrayList<String> photos, String breed, String description, String foundDate, String location, String status) {
         this.id = id;
         this.user = user;
         this.colors = colors;
@@ -28,6 +29,7 @@ public class Report {
         this.foundDate = foundDate;
         this.location = location;
         this.status = status;
+        this.species = species;
     }
 
     // Геттеры и сеттеры для всех полей
@@ -57,4 +59,8 @@ public class Report {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getSpecies() {
+        return this.species;
+    }
 }

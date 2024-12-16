@@ -29,7 +29,7 @@ document.getElementById('register').addEventListener('click', function (event) {
         };
 
         // Отправляем запрос на сервер
-        fetch( 'http://192.168.42.111:8080/find-your-pet/register', {
+        fetch( 'http://localhost:8080/find-your-pet/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

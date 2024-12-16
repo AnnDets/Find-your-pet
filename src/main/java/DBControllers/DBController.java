@@ -243,6 +243,7 @@ public class DBController implements AutoCloseable {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 int userId = rs.getInt("user_id");
+                String species = rs.getString("species");
                 String breed = rs.getString("breed");
                 String description = rs.getString("description");
                 String foundDate = rs.getString("found_date");
@@ -253,7 +254,7 @@ public class DBController implements AutoCloseable {
                 ArrayList<String> marks = getReportMarks(reportId);
                 ArrayList<String> photos = getReportPhotos(reportId);
 
-                report = new Report(reportId, getUserFromDB(userId), colors, marks,photos, breed, description, foundDate, location, status);
+                report = new Report(reportId, getUserFromDB(userId),species, colors, marks,photos, breed, description, foundDate, location, status);
             }
         } catch (SQLException e) {
             LogUtil.error("Ошибка при получении данных о заявке", e);
@@ -321,6 +322,7 @@ public class DBController implements AutoCloseable {
             while (rs.next()) {
                 int reportId = rs.getInt("found_id");
                 int userId = rs.getInt("user_id");
+                String species = rs.getString("species");
                 String breed = rs.getString("breed");
                 String description = rs.getString("description");
                 String foundDate = rs.getString("found_date");
@@ -333,6 +335,7 @@ public class DBController implements AutoCloseable {
                 Report report = new Report(
                         reportId,
                         getUserFromDB(userId),
+                        species,
                         colors,
                         marks,
                         photos,
@@ -391,6 +394,7 @@ public class DBController implements AutoCloseable {
                 Report report = new Report(
                         rs.getInt("found_id"),
                         getUserFromDB(rs.getInt("user_id")),
+                        rs.getString("species"),
                         getReportColors(rs.getInt("found_id")),
                         getReportMarks(rs.getInt("found_id")),
                         getReportPhotos(rs.getInt("found_id")),

@@ -1,8 +1,13 @@
 package utils;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import dao.UserDaoFactory;
 import models.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import services.JwtService;
+import services.UserService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -168,7 +173,8 @@ public class JSONParser {
     // Преобразование JSON в Report
     public static Report jsonToReport(JSONObject json) {
         int id = json.getInt("id");
-        User user = jsonToUser(json.getJSONObject("user"));
+        User user = JwtService.getUserFromToken(json.getString("token"));
+        String species = json.getString("species");
         ArrayList<String> colors = jsonArrayToList(json.getJSONArray("colors"));
         ArrayList<String> specialMarks = jsonArrayToList(json.getJSONArray("specialMarks"));
         ArrayList<String> photos = jsonArrayToList(json.getJSONArray("photos"));
@@ -177,9 +183,9 @@ public class JSONParser {
 
         String foundDate = json.getString("foundDate");
         String location = json.getString("location");
-        String status = json.getString("status");
+        String status = json.getString("gender");
 
-        return new Report(id, user, colors, specialMarks,photos, breed, description, foundDate, location, status);
+        return new Report(id, user, species, colors, specialMarks,photos, breed, description, foundDate, location, status);
     }
     public static JSONArray serializeReports(ArrayList<Report> reports) {
         JSONArray reportsArray = new JSONArray();

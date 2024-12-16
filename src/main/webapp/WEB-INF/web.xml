@@ -4,8 +4,49 @@
         <servlet-class>RegisterServlet</servlet-class>
 
     </servlet>
+    <servlet>
+        <servlet-name>GetReportServlet</servlet-name>
+        <servlet-class>GetReportServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>PhotoUploadServlet</servlet-name>
+        <servlet-class>PhotoUploadServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>LoginServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>SavePetServlet</servlet-name>
+        <servlet-class>SavePetServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>UserProfileServlet</servlet-name>
+        <servlet-class>UserProfileServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>GetChatsServlet</servlet-name>
+        <servlet-class>GetChatsServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ChatMessagesServlet</servlet-name>
+        <servlet-class>ChatMessagesServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>OpenApi</servlet-name>
+        <servlet-class>io.swagger.v3.jaxrs2.integration.OpenApiServlet</servlet-class>
+        <init-param>
+            <param-name>openApi.configuration.resourcePackages</param-name>
+            <param-value>com.mastertheboss.jaxrs</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>OpenApi</servlet-name>
+        <url-pattern>/openapi/*</url-pattern>
+    </servlet-mapping>
     <welcome-file-list>
-        <welcome-file>registration.html</welcome-file>
+        <welcome-file>home.html</welcome-file>
     </welcome-file-list>
     <!-- Добавьте аналогичные настройки для других сервлетов -->
 </web-app>

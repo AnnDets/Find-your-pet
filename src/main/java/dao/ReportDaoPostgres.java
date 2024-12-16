@@ -21,19 +21,21 @@ public class ReportDaoPostgres extends ReportDao {
             return false;
         }
 
-        String query = "INSERT INTO found_pets (user_id, breed, description, found_date, location, status) VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO found_pets (user_id, species, breed, description, date_found, location_found, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, report.getUser().getId());
-            stmt.setString(2, report.getBreed());
-            stmt.setString(3, report.getDescription());
-            stmt.setString(4, report.getFoundDate());
-            stmt.setString(5, report.getLocation());
-            stmt.setString(6, report.getStatus());
+            stmt.setString(2, report.getSpecies());
+            stmt.setString(3, report.getBreed());
+            stmt.setString(4, report.getDescription());
+            stmt.setDate(5, java.sql.Date.valueOf(report.getFoundDate()));
+            stmt.setString(6, report.getLocation());
+            stmt.setString(7, report.getStatus());
             stmt.executeUpdate();
 
             ResultSet generatedKeys = stmt.getGeneratedKeys();
             if (generatedKeys.next()) {
                 long reportId = generatedKeys.getLong(1);
+                report.setId((int) reportId);
                 addColors(report, report.getColors().toArray(new String[0]));
                 addMarks(report, report.getSpecialMarks().toArray(new String[0]));
                 addPhotos(report, report.getPhotos().toArray(new String[0]));
@@ -121,10 +123,11 @@ public class ReportDaoPostgres extends ReportDao {
     private Report mapResultSetToReport(ResultSet rs) throws SQLException {
         int reportId = rs.getInt("found_id");
         int userId = rs.getInt("user_id");
+        String species = rs.getString("species");
         String breed = rs.getString("breed");
         String description = rs.getString("description");
-        String foundDate = rs.getString("found_date");
-        String location = rs.getString("location");
+        String foundDate = rs.getString("date_found");
+        String location = rs.getString("location_found");
         String status = rs.getString("status");
 
         ArrayList<String> colors = getReportColors(reportId);
@@ -133,7 +136,7 @@ public class ReportDaoPostgres extends ReportDao {
 
         UserDaoFactory userDaoFactory = UserDaoFactory.getInstance();
         UserDao userDao = userDaoFactory.createUserDao("postgres", connection);
-        return new Report(reportId, (User) userDao.readByID(userId), colors, marks, photos, breed, description, foundDate, location, status);
+        return new Report(reportId, (User) userDao.readByID(userId),species, colors, marks, photos, breed, description, foundDate, location, status);
     }
 
     @Override

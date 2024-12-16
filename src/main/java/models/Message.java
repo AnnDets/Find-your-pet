@@ -16,6 +16,11 @@ public class Message {
         this.content = content;
         this.sentAt = sentAt;
     }
+    public Message(int chatId, int userId, String content) {
+        this.chatId = chatId;
+        this.userId = userId;
+        this.content = content;
+    }
 
     // Геттеры и сеттеры
     public int getId() {

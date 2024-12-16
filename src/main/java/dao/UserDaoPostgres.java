@@ -118,7 +118,7 @@ public class UserDaoPostgres extends UserDao {
 
     @Override
     public Object read(Object object) {
-        return null;
+        return readByID(((User)object).getId());
     }
 
     @Override

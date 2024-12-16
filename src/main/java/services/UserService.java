@@ -1,5 +1,11 @@
 package services;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.impl.JWTParser;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import dao.UserDaoFactory;
 import dao.UserDao;
 import models.User;
@@ -8,8 +14,11 @@ import utils.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Map;
 
 public class UserService {
+
     private final UserDao userDao;
     public UserService(Connection connection) {
         UserDaoFactory userDaoFactory = UserDaoFactory.getInstance();
@@ -129,4 +138,10 @@ public class UserService {
         LogUtil.debug("Fetching all users");
         return userDao.readAll();
     }
+
+    public User getUserByLogin(String login){
+        return (User) userDao.readByLogin(login);
+    }
+
+
 }
