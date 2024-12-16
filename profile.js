@@ -105,3 +105,77 @@ document.getElementById('Exit').addEventListener('click', function() {
     alert('Вы вышли из профиля');
     window.location.href = 'homeguest.html';
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const langData = {
+        ru: {
+            profileTitle: "Мой профиль:",
+            name: "Имя:",
+            telephone: "Телефон:",
+            email: "Email:",
+            address: "Адрес:",
+            edit: "Редактировать",
+            mainPage: "Главная страница",
+            chat: "Чат",
+            filter: "Фильтр",
+            myListing: "Мои объявления",
+            instruction: "Инструкция по поиску",
+            aboutUs: "О нас",
+            exit: "Выход",
+            errorMessage: "Ошибка: Пожалуйста, заполните все поля."
+        },
+        en: {
+            profileTitle: "My Profile:",
+            name: "Name:",
+            telephone: "Phone:",
+            email: "Email:",
+            address: "Address:",
+            edit: "Edit",
+            mainPage: "Main Page",
+            chat: "Chat",
+            filter: "Filter",
+            myListing: "My Listings",
+            instruction: "Search Instructions",
+            aboutUs: "About Us",
+            exit: "Exit",
+            errorMessage: "Error: Please fill in all fields."
+        }
+    };
+
+    const languageSwitcher = document.getElementById("languageSwitcher");
+
+    const updateLanguage = () => {
+        const currentLang = languageSwitcher.value;
+
+        // Обновляем заголовок профиля
+        document.querySelector("#one .styled-headtext").textContent = langData[currentLang].profileTitle;
+
+        // Обновляем текстовые надписи
+        document.querySelectorAll(".styled-text").forEach((element, index) => {
+            const keys = ["name", "telephone", "email", "address"];
+            if (keys[index]) {
+                element.textContent = langData[currentLang][keys[index]];
+            }
+        });
+
+        // Обновляем кнопки
+        document.getElementById("Redact").textContent = langData[currentLang].edit;
+        document.getElementById("MainPage").textContent = langData[currentLang].mainPage;
+        document.getElementById("Chat").textContent = langData[currentLang].chat;
+        document.getElementById("Filter").textContent = langData[currentLang].filter;
+        document.getElementById("My_listing").textContent = langData[currentLang].myListing;
+        document.getElementById("Instruction").textContent = langData[currentLang].instruction;
+        document.getElementById("About_us").textContent = langData[currentLang].aboutUs;
+        document.getElementById("Exit").textContent = langData[currentLang].exit;
+
+        // Обновляем текст ошибки
+        document.getElementById("errorMessage").textContent = langData[currentLang].errorMessage;
+    };
+
+    // Слушатель для переключения языка
+    languageSwitcher.addEventListener("change", updateLanguage);
+
+    // Устанавливаем начальный язык
+    updateLanguage();
+});
